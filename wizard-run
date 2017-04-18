@@ -114,7 +114,7 @@ onlinecheck () {
 }
 
 # try to update all wizards with autoupdate enabled
-if [ $((onlinecheck)) = 0 ]; then
+if [ $((onlinecheck)) = 0 ] && [ -f /config/user-data/autoupdate.dat ]; then
   for u in $(grep "=yes" /config/user-data/autoupdate.dat | awk -F= {'print $1'}); do
     [ "$u" == "wizard-0xffwsle" ]   && autoupdatewizard 0xFF-BMK-Webstatus-LetsEncrypt pocki80 ER-wizard-0xFF-WSLE master
     [ "$u" == "wizard-olsrd_v2" ]   && autoupdatewizard OLSRd_V2 pocki80 ER-wizard-OLSRd_V2 master
@@ -122,7 +122,7 @@ if [ $((onlinecheck)) = 0 ]; then
     [ "$u" == "wizard-autoupdate" ] && autoupdatewizard ER-wizard-AutoUpdate pocki80 ER-wizard-AutoUpdate master
   done
 else
-  echo "currently offline" >/dev/null
+  echo "currently offline or no autoupdate.dat" >/dev/null
 fi
 ENDSCRIPTINSTALL
 chmod 755 /config/user-data/autoupdate.sh >>$log 2>>$log
@@ -142,15 +142,83 @@ sed -i '/^#base64begin/,/^#base64end$/d' $0
 # function called when you click the wizard
 load () {
     echo "Load procedure..." >>$log
+    packagestatus='"packagestatus":"ok"'
+
+    if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-autoupdate=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
+        autoupdatefromgithub=',"autoupdatefromgithub":"on"'
+    fi
 
     # get all variables together for output
-    echo -n "{\"success\":\"1\",\"data\":{ "
+    echo -n "{\"success\":\"1\",\"data\":{ $packagestatus $autoupdatefromgithub "
     echo -n " },"
     echo    " \"definition\":{ }}"
 }
 
 # function called when you click apply
 apply () {
+    updatefromgithub=$(jq -M -r '.updatefromgithub' $INPUT)
+    if [[ "$updatefromgithub" == "on" ]]; then
+        echo "update from github requested" >>$log 2>>$log
+        olsrdwizard=""
+        for i in $(find /config/wizard/feature/ -name wizard.html); do
+            if [[ $(head $i -n 10 | grep 'ER-wizard-AutoUpdate') ]]; then
+                olsrdwizard=$i
+                break
+            fi
+        done
+        if [ ! $olsrdwizard ]; then
+            echo "error: AutoUpdate-Wizard wizard.html not found!" >>$log 2>>$log
+        elif [ $((onlinecheck)) != 0 ]; then
+            echo "currently offline" >>$log 2>>$log
+        else
+            curl -sL -o /tmp/ER-wizard.tar.gz --connect-timeout 2 https://api.github.com/repos/$gitowner/$gitrepo/tarball >>$log 2>>$log
+            tar   -xvzf /tmp/ER-wizard.tar.gz -C /tmp >/tmp/result.txt 2>>$log
+            rm -f       /tmp/ER-wizard.tar.gz >>$log 2>>$log
+            while read LINE; do
+              set $LINE
+              if [ $(basename $LINE) == "wizard-run" ] || [ $(basename $LINE) == "wizard.html" ] || [ $(basename $LINE) == "validator.json" ]; then W=1; else W=2; fi
+              [ -f "/tmp/"$LINE ] && [ $W == "1" ] && cp "/tmp/"$LINE $(dirname $olsrdwizard)"/"$(basename $LINE) >>$log 2>>$log
+            done < /tmp/result.txt
+            rm /tmp/result.txt >>$log 2>>$log
+            rm -Rf /tmp/$gitowner-$gitrepo* >>$log 2>>$log
+            chmod 755 $(dirname $olsrdwizard)"/"wizard-run >>$log 2>>$log
+            $(dirname $olsrdwizard)"/"wizard-run load >>$log 2>>$log
+        fi
+    fi
+    autoupdatefromgithub=$(jq -M -r '.autoupdatefromgithub' $INPUT)
+    if [[ "$autoupdatefromgithub" == "on" ]]; then
+        #remove "no" if exists
+        if [ -f /config/user-data/autoupdate.dat ] &&
+           [ "$(grep -i "wizard-autoupdate=no" /config/user-data/autoupdate.dat |wc -l)" == "1" ]; then
+            linenumber=$(grep -ni "wizard-autoupdate=no" /config/user-data/autoupdate.dat | awk -F: {'print $1'})
+            sed -i $linenumber'd' /config/user-data/autoupdate.dat 2>>$log
+            sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+        fi
+        if [ ! -f /config/user-data/autoupdate.dat ]; then
+            #create settings file if missing
+            echo 'wizard-autoupdate=yes' >/config/user-data/autoupdate.dat 2>>$log
+            echo '' >>/config/user-data/autoupdate.dat 2>>$log
+            sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+        else
+            #add yes line if missing
+            if [ "$(grep -i "wizard-autoupdate=yes" /config/user-data/autoupdate.dat |wc -l)" == "0" ]; then
+                echo 'wizard-autoupdate=yes' >>/config/user-data/autoupdate.dat 2>>$log
+                echo '' >>/config/user-data/autoupdate.dat 2>>$log
+                sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+            fi
+        fi
+    else
+        #remove yes line if exists
+        if [ -f /config/user-data/autoupdate.dat ] &&
+           [ "$(grep -i "wizard-autoupdate=yes" /config/user-data/autoupdate.dat |wc -l)" == "1" ]; then
+            linenumber=$(grep -ni "wizard-autoupdate=yes" /config/user-data/autoupdate.dat | awk -F: {'print $1'})
+            sed -i $linenumber'd' /config/user-data/autoupdate.dat 2>>$log
+            sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+        fi
+    fi
+    # end
+    ####### wizard manual update from github
+
     # for debugging purposes
     cp $INPUT /tmp/result.json
 
