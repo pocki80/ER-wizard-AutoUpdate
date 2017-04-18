@@ -37,6 +37,7 @@ cat >/config/user-data/autoupdate.sh 2>>$log <<'ENDSCRIPTINSTALL'
 updlog=/var/log/0xffautoupdate.log
 autoupdatewizard () {
 suche="$1"; gitowner="$2"; gitrepo="$3"; gitbranch="$4"; wiz=""
+echo "CRONJOB started $(date +%d.%m.%Y-%H:%M:%S.%N)" >>$updlog
 echo "Performing upgrade for Wizard $suche..." >>$updlog
 for i in $(find /config/wizard/feature/ -name wizard.html); do
   if [[ $(head $i -n 10 | grep "$suche") ]]; then
@@ -126,7 +127,7 @@ if [ $((onlinecheck)) = 0 ] && [ -f /config/user-data/autoupdate.dat ]; then
 else
   echo "currently offline or no autoupdate.dat" >>$updlog
 fi
-
+echo "." >>$updlog
 exit 0
 
 ENDSCRIPTINSTALL
