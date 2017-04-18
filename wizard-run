@@ -126,6 +126,9 @@ if [ $((onlinecheck)) = 0 ] && [ -f /config/user-data/autoupdate.dat ]; then
 else
   echo "currently offline or no autoupdate.dat" >>$updlog
 fi
+
+exit 0
+
 ENDSCRIPTINSTALL
 chmod 755 /config/user-data/autoupdate.sh >>$log 2>>$log
 
