@@ -1,0 +1,174 @@
+#!/bin/bash
+#
+# EdgeMAX Wizard "ER-wizard-AutoUpdate" created 04/2017 by CPO/BMK for FunkFeuer.at
+# Version 20170418
+# ^-- previous line is used from bmk-webstatus-package as version identification, dont remove "Version "
+# Shortform: ER-wizard-AutoUpdate
+#
+# Github repository: https://github.com/pocki80/ER-wizard-AutoUpdate
+#
+# Works on all EdgeRouter and EdgePoint Devices (system version 1.9.0+)
+#
+
+ACTION=$1
+INPUT=$2
+
+cfgusrdir="/config/user-data/"
+log="/var/log/0xffautoupdatewiz.log"
+
+#define update sources on github
+gitowner="pocki80"
+gitrepo="ER-wizard-AutoUpdate"
+gitbranch="master"
+
+#
+# DO NOT EDIT BELOW HERE !
+#
+
+echo "EdgeMAX ER-wizard-AutoUpdate Wizard started $(date +%H:%M:%S.%N)" >>$log
+
+#base64begin 
+# !dont edit or remove this comment!
+
+cat >/config/user-data/autoupdate.sh 2>>$log <<'ENDSCRIPTINSTALL'
+#### Auto-Update wizards!
+# check for applicable updates: download (6.25am) and install
+autoupdatewizard () {
+suche="$1"; gitowner="$2"; gitrepo="$3"; gitbranch="$4"; wiz=""
+echo "Performing upgrade for Wizard $suche..."
+for i in $(find /config/wizard/feature/ -name wizard.html); do
+  if [[ $(head $i -n 10 | grep "$suche") ]]; then
+    wiz=$i
+    break
+  fi
+done
+if [ ! $wiz ]; then echo "error: $suche wizard.html not found!";
+else
+  CURRENTVERSION=$(head -n 8 $wiz | grep -i versioninfo= | awk -F"=" {'print $2'})
+  GITVERSIONDATA=$(curl -sL https://raw.githubusercontent.com/$gitowner/$gitrepo/$gitbranch/wizard.html | head -n 8 | grep -iE "versioninfo=|autoupdate=")
+  GITVERSION=$(echo  "$GITVERSIONDATA" | grep -i versioninfo= | awk -F"=" {'print $2'})
+  AUTOVERSION=$(echo "$GITVERSIONDATA" | grep -i autoupdate=  | awk -F"=" {'print $2'})
+  install=""
+  if [ "$GITVERSION" ] && [ "$CURRENTVERSION" ]; then 
+    if [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ] && [ "$AUTOVERSION" ] && [ "$GITVERSION" == "$AUTOVERSION" ]; then 
+      echo "new version "$GITVERSION" is enabled to auto-update!"
+      install="1"
+    elif [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ]; then 
+      echo "new version "$GITVERSION" (current: "$CURRENTVERSION") is not enabled to auto-update"
+    elif [ $(($GITVERSION)) == $(($CURRENTVERSION)) ]; then 
+      echo "current version "$CURRENTVERSION" is up-to-date"
+    elif [ $(($GITVERSION)) \< $(($CURRENTVERSION)) ]; then 
+      echo "current version "$CURRENTVERSION" is newer than version "$GITVERSION" on github"
+    fi
+    if [ "$install" ]; then
+      echo "Update "$(dirname $wiz)"..."
+      curl -sL -o /tmp/ER-wizard.tar.gz --connect-timeout 2 https://api.github.com/repos/$gitowner/$gitrepo/tarball
+      tar   -xvzf /tmp/ER-wizard.tar.gz -C /tmp >/tmp/result.txt
+      rm -f       /tmp/ER-wizard.tar.gz
+      while read LINE; do
+        set $LINE
+        if [ $(basename $LINE) == "wizard-run" ] || [ $(basename $LINE) == "wizard.html" ] || [ $(basename $LINE) == "validator.json" ]; then W=1; else W=2; fi
+        [ -f "/tmp/"$LINE ] && [ $W == "1" ] && cp "/tmp/"$LINE $(dirname $wiz)"/"$(basename $LINE)
+      done < /tmp/result.txt
+      rm /tmp/result.txt
+      rm -Rf /tmp/$gitowner-$gitrepo* 
+      chmod 755 $(dirname $wiz)"/"wizard-run
+      echo "Update done, now triggering initial load..."
+      $(dirname $wiz)"/"wizard-run load 
+      #wait to continue (in case of olsrd-restart needed to get back online)
+      sleep 5
+    fi
+  fi
+fi
+}
+
+v4iphost='8.8.8.8'
+v4dnshost='www.google.com'
+v6iphost='2001:4860:4860::8888'
+v6dnshost='www.google.com'
+# function to check if connectivity is given to download packages
+onlinecheck () {
+    ping="ping -c 1 -W 1 ";
+    ping6="ping6 -c 1 -W 1 ";
+    $ping $v4iphost > /dev/null
+    if [[ $? == 0 ]]; then
+        $ping6 $v6iphost > /dev/null
+        if [[ $? == 0 ]]; then
+            $ping6 $v6dnshost > /dev/null
+            if [[ $? == 0 ]]; then
+                return 0
+            else
+                return 1
+            fi
+        else
+            $ping $v4dnshost > /dev/null
+            if [[ $? == 0 ]]; then
+                return 0
+            else
+                return 1
+            fi
+        fi
+    else
+        return 1
+    fi
+}
+
+# try to update all wizards with autoupdate enabled
+if [ $((onlinecheck)) = 0 ]; then
+  for u in $(grep "=yes" /config/user-data/autoupdate.dat | awk -F= {'print $1'}); do
+    [ "$u" == "wizard-0xffwsle" ]   && autoupdatewizard 0xFF-BMK-Webstatus-LetsEncrypt pocki80 ER-wizard-0xFF-WSLE master
+    [ "$u" == "wizard-olsrd_v2" ]   && autoupdatewizard OLSRd_V2 pocki80 ER-wizard-OLSRd_V2 master
+    [ "$u" == "wizard-olsrd_v1" ]   && autoupdatewizard OLSRd_V1 vchrizz ER-wizard-OLSRd_V1 master
+    [ "$u" == "wizard-autoupdate" ] && autoupdatewizard ER-wizard-AutoUpdate pocki80 ER-wizard-AutoUpdate master
+  done
+else
+  echo "currently offline" >/dev/null
+fi
+ENDSCRIPTINSTALL
+chmod 755 /config/user-data/autoupdate.sh >>$log 2>>$log
+
+if [ ! -f /config/user-data/autoupdate.dat ]; then
+    #create settings file if missing, default auto-update autoupdate-wizard
+    echo 'wizard-autoupdate=yes' >/config/user-data/autoupdate.dat 2>>$log
+    echo '' >>/config/user-data/autoupdate.dat 2>>$log
+    sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+fi
+
+# remove installtion block
+sed -i '/^#base64begin/,/^#base64end$/d' $0
+# !dont edit or remove this comment!
+#base64end
+
+# function called when you click the wizard
+load () {
+    echo "Load procedure..." >>$log
+
+    # get all variables together for output
+    echo -n "{\"success\":\"1\",\"data\":{ "
+    echo -n " },"
+    echo    " \"definition\":{ }}"
+}
+
+# function called when you click apply
+apply () {
+    # for debugging purposes
+    cp $INPUT /tmp/result.json
+
+    # $ret and $output comes from port change
+    if [ "$ret" == "1" ]; then
+        echo "{\"success\":\"0\",\"error\": \"${output//\"/\'}\"}"
+    else
+        echo "{\"success\":\"1\"}"
+    fi
+}
+
+case "$ACTION" in
+    load)
+        load
+        ;;
+    apply)
+        apply
+        ;;
+esac
+
+echo "EdgeMAX ER-wizard-AutoUpdate Wizard ended $(date +%H:%M:%S.%N)" >> $log

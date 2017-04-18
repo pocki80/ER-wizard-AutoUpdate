@@ -1,0 +1,33 @@
+<!--
+
+EdgeMAX Wizard "ER-wizard-AutoUpdate" created 04/2017 by CPO/BMK for FunkFeuer.at
+Works on EdgeRouter and EdgeRouter X / X-SFP (system version 1.9.0+)
+versioninfo=201704180
+^-- use version identifier as number: YYYYMMDDX whereas X can be intraday-version
+autoupdate=201704180
+^-- set autoupdate the same version identifier to allow autoupdates
+
+
+-->
+<div class="instructions">
+    <h3>AutoUpdate</h3>
+</div>
+<legend style="position:absolute;right:0px;padding:5px;">
+    <center>EdgeMAX Wizard "ER-wizard-AutoUpdate"<br>created 04/2017 by CPO/BMK for FunkFeuer.at<br>
+    Version 20170418</center>
+</legend>
+<div style="padding:15px;border: 1px solid lightgray;width:648px">
+  <table border="0">
+    <tr><td><div><span><input id="updatefromgithub" name="updatefromgithub" type="checkbox" />&nbsp;</span></div><div><span class="text" data-infotip='Load and install newest version directly from Github'> Upgrade Wizard from GitHub (online only) on 'Apply'</span></div></td></tr>
+    <tr><td><div><span><input id="autoupdatefromgithub" name="autoupdatefromgithub" type="checkbox" />&nbsp;</span></div><div><span class="text" data-infotip='Runs a daily job checking for updates - installs available auto-updates automatically'> Upgrade Wizard from GitHub <b>automatically</b></span></div></td></tr>
+  </table>
+</div>
+<br><br>
+<script>
+function validate() {
+}
+document.onchange=function(){
+}
+document.onsubmit=function(){
+}
+</script>
