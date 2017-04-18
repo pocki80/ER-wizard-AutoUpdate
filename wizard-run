@@ -34,10 +34,10 @@ cat >/config/user-data/autoupdate.sh 2>>$log <<'ENDSCRIPTINSTALL'
 #!/bin/bash
 #### Auto-Update wizards!
 # check for applicable updates: download (6.25am) and install
-updlog=/tmp/0xffautoupdate.log
+updlog=/var/log/0xffautoupdate.log
 autoupdatewizard () {
 suche="$1"; gitowner="$2"; gitrepo="$3"; gitbranch="$4"; wiz=""
-echo "Performing upgrade for Wizard $suche..."
+echo "Performing upgrade for Wizard $suche..." >>$updlog
 for i in $(find /config/wizard/feature/ -name wizard.html); do
   if [[ $(head $i -n 10 | grep "$suche") ]]; then
     wiz=$i
