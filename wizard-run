@@ -34,6 +34,7 @@ cat >/config/user-data/autoupdate.sh 2>>$log <<'ENDSCRIPTINSTALL'
 #!/bin/bash
 #### Auto-Update wizards!
 # check for applicable updates: download (6.25am) and install
+updlog=/tmp/0xffautoupdate.log
 autoupdatewizard () {
 suche="$1"; gitowner="$2"; gitrepo="$3"; gitbranch="$4"; wiz=""
 echo "Performing upgrade for Wizard $suche..."
@@ -43,7 +44,7 @@ for i in $(find /config/wizard/feature/ -name wizard.html); do
     break
   fi
 done
-if [ ! $wiz ]; then echo "error: $suche wizard.html not found!";
+if [ ! $wiz ]; then echo "error: $suche wizard.html not found!" >>$updlog; 
 else
   CURRENTVERSION=$(head -n 8 $wiz | grep -i versioninfo= | awk -F"=" {'print $2'})
   GITVERSIONDATA=$(curl -sL https://raw.githubusercontent.com/$gitowner/$gitrepo/$gitbranch/wizard.html | head -n 8 | grep -iE "versioninfo=|autoupdate=")
@@ -52,20 +53,20 @@ else
   install=""
   if [ "$GITVERSION" ] && [ "$CURRENTVERSION" ]; then 
     if [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ] && [ "$AUTOVERSION" ] && [ "$GITVERSION" == "$AUTOVERSION" ]; then 
-      echo "new version "$GITVERSION" is enabled to auto-update!"
+      echo "new version "$GITVERSION" is enabled to auto-update!" >>$updlog
       install="1"
     elif [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ]; then 
-      echo "new version "$GITVERSION" (current: "$CURRENTVERSION") is not enabled to auto-update"
+      echo "new version "$GITVERSION" (current: "$CURRENTVERSION") is not enabled to auto-update" >>$updlog
     elif [ $(($GITVERSION)) == $(($CURRENTVERSION)) ]; then 
-      echo "current version "$CURRENTVERSION" is up-to-date"
+      echo "current version "$CURRENTVERSION" is up-to-date" >>$updlog
     elif [ $(($GITVERSION)) \< $(($CURRENTVERSION)) ]; then 
-      echo "current version "$CURRENTVERSION" is newer than version "$GITVERSION" on github"
+      echo "current version "$CURRENTVERSION" is newer than version "$GITVERSION" on github" >>$updlog
     fi
     if [ "$install" ]; then
       echo "Update "$(dirname $wiz)"..."
-      curl -sL -o /tmp/ER-wizard.tar.gz --connect-timeout 2 https://api.github.com/repos/$gitowner/$gitrepo/tarball
-      tar   -xvzf /tmp/ER-wizard.tar.gz -C /tmp >/tmp/result.txt
-      rm -f       /tmp/ER-wizard.tar.gz
+      curl -sL -o /tmp/ER-wizard.tar.gz --connect-timeout 2 https://api.github.com/repos/$gitowner/$gitrepo/tarball >>$updlog 2>>$updlog
+      tar   -xvzf /tmp/ER-wizard.tar.gz -C /tmp >/tmp/result.txt 2>>$updlog
+      rm -f       /tmp/ER-wizard.tar.gz 2>>$updlog
       while read LINE; do
         set $LINE
         if [ $(basename $LINE) == "wizard-run" ] || [ $(basename $LINE) == "wizard.html" ] || [ $(basename $LINE) == "validator.json" ]; then W=1; else W=2; fi
@@ -73,9 +74,9 @@ else
       done < /tmp/result.txt
       rm /tmp/result.txt
       rm -Rf /tmp/$gitowner-$gitrepo* 
-      chmod 755 $(dirname $wiz)"/"wizard-run
-      echo "Update done, now triggering initial load..."
-      $(dirname $wiz)"/"wizard-run load 
+      chmod 755 $(dirname $wiz)"/"wizard-run 2>>$updlog
+      echo "Update done, now triggering initial load..." >>$updlog
+      $(dirname $wiz)"/"wizard-run load >>$updlog
       #wait to continue (in case of olsrd-restart needed to get back online)
       sleep 5
     fi
@@ -123,7 +124,7 @@ if [ $((onlinecheck)) = 0 ] && [ -f /config/user-data/autoupdate.dat ]; then
     [ "$u" == "wizard-autoupdate" ] && autoupdatewizard ER-wizard-AutoUpdate pocki80 ER-wizard-AutoUpdate master
   done
 else
-  echo "currently offline or no autoupdate.dat" >/dev/null
+  echo "currently offline or no autoupdate.dat" >>$updlog
 fi
 ENDSCRIPTINSTALL
 chmod 755 /config/user-data/autoupdate.sh >>$log 2>>$log
@@ -158,12 +159,45 @@ load () {
     echo "Load procedure..." >>$log
     packagestatus='"packagestatus":"ok"'
 
+    ####### wizard version check against github
+    # 
+    olsrdwizard=""
+    for i in $(find /config/wizard/feature/ -name wizard.html | grep -iv olsr); do
+        if [[ $(head $i -n 10 | grep '0xFF-BMK-Webstatus-LetsEncrypt') ]]; then
+            olsrdwizard=$i
+            break
+        fi
+    done
+    if [ ! $olsrdwizard ]; then
+        updatetext="error: 0xFF-BMK-Webstatus-LetsEncrypt wizard.html not found!" >>$log 2>>$log
+    else
+        CURRENTVERSION=$(head -n 8 $olsrdwizard | grep -i versioninfo= | awk -F"=" {'print $2'})
+        if [ $((onlinecheck)) = 0 ]; then
+            GITVERSION=$(curl -sL --connect-timeout 2 https://raw.githubusercontent.com/$gitowner/$gitrepo/$gitbranch/wizard.html | head -n 8 | grep -i versioninfo= | awk -F"=" {'print $2'})
+            if [ "$GITVERSION" ] && [ "$CURRENTVERSION" ]; then 
+                if [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ]; then 
+                    updatetext="new version available: "$GITVERSION", current: "$CURRENTVERSION >>$log 2>>$log
+                else
+                    updatetext="current version "$CURRENTVERSION" is up-to-date" >>$log 2>>$log
+                fi
+            else
+                updatetext="version info not available. git:"$GITVERSION", current: "$CURRENTVERSION"." >>$log 2>>$log
+            fi
+        else
+            updatetext="version info not available. git:OFFLINE, current: "$CURRENTVERSION"." >>$log 2>>$log
+        fi
+    fi
+    updatestatus=',"updatestatus":"'$updatetext'"'
+    # end
+    ####### wizard version check against github
+
+
     if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-autoupdate=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
         autoupdatefromgithub=',"autoupdatefromgithub":"on"'
     fi
 
     # get all variables together for output
-    echo -n "{\"success\":\"1\",\"data\":{ $packagestatus $autoupdatefromgithub "
+    echo -n "{\"success\":\"1\",\"data\":{ $packagestatus $autoupdatefromgithub $updatestatus"
     echo -n " },"
     echo    " \"definition\":{ }}"
 }
