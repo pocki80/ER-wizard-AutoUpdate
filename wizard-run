@@ -31,6 +31,7 @@ echo "EdgeMAX ER-wizard-AutoUpdate Wizard started $(date +%H:%M:%S.%N)" >>$log
 # !dont edit or remove this comment!
 
 cat >/config/user-data/autoupdate.sh 2>>$log <<'ENDSCRIPTINSTALL'
+#!/bin/bash
 #### Auto-Update wizards!
 # check for applicable updates: download (6.25am) and install
 autoupdatewizard () {
@@ -127,11 +128,24 @@ fi
 ENDSCRIPTINSTALL
 chmod 755 /config/user-data/autoupdate.sh >>$log 2>>$log
 
+cat >/config/scripts/post-config.d/autoupdatecron.sh 2>>$log <<'ENDSCRIPTINSTALL'
+#!/bin/bash
+#### Auto-Update wizards
+# check for cronjob, re-establish daily start
+if [ -f /config/user-data/autoupdate.sh ] &&
+   [ -f /config/user-data/autoupdate.dat ] &&
+   [ ! -L /etc/cron.daily/autoupdatewizards ]; then
+    ln -sf /config/user-data/autoupdate.sh /etc/cron.daily/autoupdatewizards
+fi
+exit 0
+ENDSCRIPTINSTALL
+chmod 755 /config/scripts/post-config.d/autoupdatecron.sh >>$log 2>>$log
+
 if [ ! -f /config/user-data/autoupdate.dat ]; then
     #create settings file if missing, default auto-update autoupdate-wizard
     echo 'wizard-autoupdate=yes' >/config/user-data/autoupdate.dat 2>>$log
     echo '' >>/config/user-data/autoupdate.dat 2>>$log
-    sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+    sed -i '/^$/d' /config/user-data/autoupdate.dat 2>>$log
 fi
 
 # remove installtion block
@@ -192,19 +206,19 @@ apply () {
            [ "$(grep -i "wizard-autoupdate=no" /config/user-data/autoupdate.dat |wc -l)" == "1" ]; then
             linenumber=$(grep -ni "wizard-autoupdate=no" /config/user-data/autoupdate.dat | awk -F: {'print $1'})
             sed -i $linenumber'd' /config/user-data/autoupdate.dat 2>>$log
-            sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+            sed -i '/^$/d' /config/user-data/autoupdate.dat 2>>$log
         fi
         if [ ! -f /config/user-data/autoupdate.dat ]; then
             #create settings file if missing
             echo 'wizard-autoupdate=yes' >/config/user-data/autoupdate.dat 2>>$log
             echo '' >>/config/user-data/autoupdate.dat 2>>$log
-            sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+            sed -i '/^$/d' /config/user-data/autoupdate.dat 2>>$log
         else
             #add yes line if missing
             if [ "$(grep -i "wizard-autoupdate=yes" /config/user-data/autoupdate.dat |wc -l)" == "0" ]; then
                 echo 'wizard-autoupdate=yes' >>/config/user-data/autoupdate.dat 2>>$log
                 echo '' >>/config/user-data/autoupdate.dat 2>>$log
-                sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+                sed -i '/^$/d' /config/user-data/autoupdate.dat 2>>$log
             fi
         fi
     else
@@ -213,7 +227,7 @@ apply () {
            [ "$(grep -i "wizard-autoupdate=yes" /config/user-data/autoupdate.dat |wc -l)" == "1" ]; then
             linenumber=$(grep -ni "wizard-autoupdate=yes" /config/user-data/autoupdate.dat | awk -F: {'print $1'})
             sed -i $linenumber'd' /config/user-data/autoupdate.dat 2>>$log
-            sed -i '/^$/d' d/config/user-data/autoupdate.dat 2>>$log
+            sed -i '/^$/d' /config/user-data/autoupdate.dat 2>>$log
         fi
     fi
     # end
