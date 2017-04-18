@@ -163,7 +163,7 @@ load () {
     # 
     olsrdwizard=""
     for i in $(find /config/wizard/feature/ -name wizard.html | grep -iv olsr); do
-        if [[ $(head $i -n 10 | grep '0xFF-BMK-Webstatus-LetsEncrypt') ]]; then
+        if [[ $(head $i -n 10 | grep 'ER-wizard-AutoUpdate') ]]; then
             olsrdwizard=$i
             break
         fi
