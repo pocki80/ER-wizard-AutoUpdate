@@ -23,6 +23,23 @@ autoupdate=201704186
     <tr><td colspan="2"><div><span><input id="autoupdatefromgithub" name="autoupdatefromgithub" type="checkbox" />&nbsp;</span></div><div><span class="text" data-infotip='Runs a daily job checking for updates - installs available auto-updates automatically'> Upgrade Wizard from GitHub <b>automatically</b> (just this AutoUpdate-Wizard, not the individual Wizards) </span></div></td></tr>
   </table>
 </div>
+<fieldset id="wizards" name="wizards" class="primary expanded">
+    <legend>Wizards enabled for AutoUpdate</legend>
+    <div class="addable" data-min="1" data-max="1" data-object="wizards" data-objectify="1">
+        <div class="addable-template" style="padding-top:0px;">
+            <div class="multi">
+                <div><input name="enabled" type="checkbox" onclick="validate()" disabled /></div>
+                <div><input id="name" name="name" size="16" disabled /></div>
+                <div><input id="current" name="current" size="10" disabled /></div>
+                <div><input id="git" name="git" size="10" disabled /></div>
+            </div>
+        </div>
+        <div class="addable-container"></div>
+        <!-- although hidden, this add-button needs to exist! //-->
+        <button type="button" class="addable-add" style="position:absolute;right:0px;opacity:0.0;filter:alpha(opacity=0);" disabled></button>
+    </div>
+</fieldset>
+
 <br><br>
 <script>
 function colors() {
@@ -38,6 +55,22 @@ function colors() {
         input.style.color = "green";
         //enable();
     } 
+    var v6nodes = document.getElementById("wizards").getElementsByTagName('*');
+    for(var i=0; i<v6nodes.length; i++) {
+        if (v6nodes[i].name == "name") {
+            v6nodes[i].disabled = true;
+        } else if (v6nodes[i].name == "git") {
+            v6nodes[i].disabled = true;
+        } else if (v6nodes[i].name == "current") {
+            v6nodes[i].disabled = true;
+        } else if (v6nodes[i].name == "enabled") {
+            // not implemented to wizard-run already
+            if (v6nodes[i].value=="wizard-autoupdate")
+                v6nodes[i].disabled = true;
+            }
+        }
+    }
+
 }
 function validate() {
 }

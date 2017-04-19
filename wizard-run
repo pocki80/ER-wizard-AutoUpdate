@@ -205,13 +205,30 @@ load () {
     # end
     ####### wizard version check against github
 
+    ####### search for installed/supported wizards
+    #
+    for i in $(find /config/wizard/feature/ -name wizard.html); do
+        name=$(echo $i | awk -F/ {'print $5'})
+        [[ $(head $i -n 10 | grep 'ER-wizard-AutoUpdate') ]] && [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-autoupdate=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ] && wizstatus='"enabled":"on",' || wizstatus=""
+        [[ $(head $i -n 10 | grep 'OLSRd_V1') ]] && [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-olsrd_v1=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ] && wizstatus='"enabled":"on",' || wizstatus=""
+        [[ $(head $i -n 10 | grep 'OLSRd_V2') ]] && [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-olsrd_v2=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ] && wizstatus='"enabled":"on",' || wizstatus=""
+        [[ $(head $i -n 10 | grep '0xFF-BMK-Webstatus-LetsEncrypt') ]] && [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-0xffwsle=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ] && wizstatus='"enabled":"on",' || wizstatus=""
+        if [[ "$(head $i -n 10 | grep -E '0xFF-BMK-Webstatus-LetsEncrypt|OLSRd_V1|OLSRd_V2|ER-wizard-AutoUpdate' | wc -l)" == "0" ]]; then
+            continue
+        fi
+        wizards=$wizards'{'$wizstatus'"name":"'${name}'","current":"'${current}'","git":"'${git}'},'
+    done
+    wizards=${wizards%","}
+    wizards=",\"wizards\":[$wizards]"
+    # end
+    ####### search wizards
 
     if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-autoupdate=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
         autoupdatefromgithub=',"autoupdatefromgithub":"on"'
     fi
 
     # get all variables together for output
-    echo -n "{\"success\":\"1\",\"data\":{ $packagestatus $autoupdatefromgithub $updatestatus"
+    echo -n "{\"success\":\"1\",\"data\":{ $packagestatus $autoupdatefromgithub $updatestatus $wizards"
     echo -n " },"
     echo    " \"definition\":{ }}"
 }
