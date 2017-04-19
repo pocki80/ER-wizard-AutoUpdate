@@ -211,6 +211,7 @@ load () {
         name=$(echo $i | awk -F/ {'print $5'})
         wizstatus=""
         internal=""
+        infotext=""
         if [[ $(head $i -n 10 | grep 'ER-wizard-AutoUpdate') ]]; then
             internal="wizard-autoupdate"
             if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
@@ -234,7 +235,7 @@ load () {
         else
             continue
         fi
-        wizards=$wizards'{'$wizstatus'"name":"'${name}'","internal":"'${internal}'","current":"'${current}'","git":"'${git}'"},'
+        wizards=$wizards'{'$wizstatus'"name":"'${name}'","internal":"'${internal}'","current":"'${current}'","text":"'${infotext}'","git":"'${git}'"},'
     done
     wizards=${wizards%","}
     wizards=",\"wizards\":[$wizards]"

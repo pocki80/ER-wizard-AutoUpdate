@@ -29,10 +29,11 @@ autoupdate=201704186
         <div class="addable-template" style="padding-top:0px;">
             <div class="multi">
                 <div><input id="internal" name="internal" type="hidden" /></div>
-                <div><input name="enabled" type="checkbox" onclick="validate()" disabled /></div>
+                <div><input name="enabled" type="checkbox" onclick="validate()" /></div>
                 <div><input id="name" name="name" size="16" disabled /></div>
                 <div> Current:<input id="current" name="current" size="10" disabled /></div>
                 <div> Github:<input id="git" name="git" size="10" disabled /></div>
+                <div><input id="text" name="text" size="20" disabled /></div>
             </div>
         </div>
         <div class="addable-container"></div>
@@ -68,6 +69,8 @@ function colors() {
         } else if (v6nodes[i].name == "git") {
             v6nodes[i].disabled = true;
         } else if (v6nodes[i].name == "current") {
+            v6nodes[i].disabled = true;
+        } else if (v6nodes[i].name == "text") {
             v6nodes[i].disabled = true;
         } else if (v6nodes[i].name == "enabled" && remember==1) {
             v6nodes[i].disabled = true;
