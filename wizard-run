@@ -55,14 +55,16 @@ else
   if [ "$GITVERSION" ] && [ "$CURRENTVERSION" ]; then 
     if [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ] && [ "$AUTOVERSION" ] && [ "$GITVERSION" == "$AUTOVERSION" ]; then 
       echo "new version "$GITVERSION" is enabled to auto-update!" >>$updlog
-      curl -so /dev/null --connect-timeout 2 --speed-time 2 http://ff.cybercomm.at/aulog/logthis.php?w=start%20$gitrepo%20$CURRENTVERSION%20to%20$GITVERSION&r=$hostname >/dev/null 2>/dev/null
+      curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=updating%20$gitrepo%20$CURRENTVERSION%20to%20$GITVERSION&r=$hostname" >/dev/null 2>/dev/null
       install="1"
     elif [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ]; then 
       echo "new version "$GITVERSION" (current: "$CURRENTVERSION") is not enabled to auto-update" >>$updlog
+      curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=keep%20$gitrepo%20$CURRENTVERSION%20ignore%20$GITVERSION&r=$hostname" >/dev/null 2>/dev/null
     elif [ $(($GITVERSION)) == $(($CURRENTVERSION)) ]; then 
       echo "current version "$CURRENTVERSION" is up-to-date" >>$updlog
     elif [ $(($GITVERSION)) \< $(($CURRENTVERSION)) ]; then 
       echo "current version "$CURRENTVERSION" is newer than version "$GITVERSION" on github" >>$updlog
+      curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=ahead%20$gitrepo%20$CURRENTVERSION%20over%20$GITVERSION&r=$hostname" >/dev/null 2>/dev/null
     fi
     if [ "$install" ]; then
       echo "Update "$(dirname $wiz)"..."
@@ -78,11 +80,11 @@ else
       rm -Rf /tmp/$gitowner-$gitrepo* 
       chmod 755 $(dirname $wiz)"/"wizard-run 2>>$updlog
       echo "Update done, now triggering initial load..." >>$updlog
-      curl -so /dev/null --connect-timeout 2 --speed-time 2 http://ff.cybercomm.at/aulog/logthis.php?w=load%20$gitrepo&r=$hostname >/dev/null 2>/dev/null
+      curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=load%20$gitrepo&r=$hostname" >/dev/null 2>/dev/null
       $(dirname $wiz)"/"wizard-run load >>$updlog
       #wait to continue (in case of olsrd-restart needed to get back online)
       sleep 5
-      curl -so /dev/null --connect-timeout 2 --speed-time 2 http://ff.cybercomm.at/aulog/logthis.php?w=done%20$gitrepo&r=$hostname >/dev/null 2>/dev/null
+      curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=done%20$gitrepo&r=$hostname" >/dev/null 2>/dev/null
     fi
   fi
 fi
@@ -121,7 +123,7 @@ onlinecheck () {
 
 start () {
   echo "CRONJOB started $(date +%d.%m.%Y-%H:%M:%S.%N)" >>$updlog
-  curl -so /dev/null --connect-timeout 2 --speed-time 2 http://ff.cybercomm.at/aulog/logthis.php?w=init&r=$hostname >/dev/null 2>/dev/null
+  curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=init&r=$hostname" >/dev/null 2>/dev/null
   # try to update all wizards with autoupdate enabled
   if [ $((onlinecheck)) = 0 ] && [ -f /config/user-data/autoupdate.dat ]; then
     for u in $(grep "=yes" /config/user-data/autoupdate.dat | awk -F= {'print $1'}); do
@@ -133,8 +135,8 @@ start () {
   else
     echo "currently offline or no autoupdate.dat" >>$updlog
   fi
+  curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=finish&r=$hostname" >/dev/null 2>/dev/null
   echo "." >>$updlog
-  curl -so /dev/null --connect-timeout 2 --speed-time 2 http://ff.cybercomm.at/aulog/logthis.php?w=finish&r=$hostname >/dev/null 2>/dev/null
 }
 
 start; exit 0
