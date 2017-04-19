@@ -209,14 +209,32 @@ load () {
     #
     for i in $(find /config/wizard/feature/ -name wizard.html); do
         name=$(echo $i | awk -F/ {'print $5'})
-        [[ $(head $i -n 10 | grep 'ER-wizard-AutoUpdate') ]] && [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-autoupdate=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ] && wizstatus='"enabled":"on",' || wizstatus=""
-        [[ $(head $i -n 10 | grep 'OLSRd_V1') ]] && [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-olsrd_v1=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ] && wizstatus='"enabled":"on",' || wizstatus=""
-        [[ $(head $i -n 10 | grep 'OLSRd_V2') ]] && [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-olsrd_v2=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ] && wizstatus='"enabled":"on",' || wizstatus=""
-        [[ $(head $i -n 10 | grep '0xFF-BMK-Webstatus-LetsEncrypt') ]] && [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "wizard-0xffwsle=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ] && wizstatus='"enabled":"on",' || wizstatus=""
-        if [[ "$(head $i -n 10 | grep -E '0xFF-BMK-Webstatus-LetsEncrypt|OLSRd_V1|OLSRd_V2|ER-wizard-AutoUpdate' | wc -l)" == "0" ]]; then
+        wizstatus=""
+        internal=""
+        if [[ $(head $i -n 10 | grep 'ER-wizard-AutoUpdate') ]]; then
+            internal="wizard-autoupdate"
+            if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
+                wizstatus='"enabled":"on",'
+            fi 
+        elif [[ $(head $i -n 10 | grep 'OLSRd_V1') ]]; then
+            internal="wizard-olsrd_v1"
+            if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
+                wizstatus='"enabled":"on",'
+            fi 
+        elif [[ $(head $i -n 10 | grep 'OLSRd_V2') ]]; then
+            internal="wizard-olsrd_v2"
+            if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
+                wizstatus='"enabled":"on",'
+            fi 
+        elif [[ $(head $i -n 10 | grep '0xFF-BMK-Webstatus-LetsEncrypt') ]]; then
+            internal="wizard-0xffwsle"
+            if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
+                wizstatus='"enabled":"on",'
+            fi 
+        else
             continue
         fi
-        wizards=$wizards'{'$wizstatus'"name":"'${name}'","current":"'${current}'","git":"'${git}'"},'
+        wizards=$wizards'{'$wizstatus'"name":"'${name}'","internal":"'${internal}'","current":"'${current}'","git":"'${git}'"},'
     done
     wizards=${wizards%","}
     wizards=",\"wizards\":[$wizards]"
