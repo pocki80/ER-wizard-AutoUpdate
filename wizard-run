@@ -30,7 +30,7 @@ echo "EdgeMAX ER-wizard-AutoUpdate Wizard started $(date +%H:%M:%S.%N)" >>$log
 #base64begin 
 # !dont edit or remove this comment!
 
-cat >/config/user-data/autoupdate.sh 2>>$log <<'ENDSCRIPTINSTALL'
+cat >/config/user-data/autoupdate.sh 2>>$log <'ENDSCRIPTINSTALL'
 #!/bin/bash
 #### Auto-Update wizards!
 # check for applicable updates: download (6.25am) and install
@@ -80,9 +80,17 @@ else
       rm -Rf /tmp/$gitowner-$gitrepo* 
       chmod 755 $(dirname $wiz)"/"wizard-run 2>>$updlog
       echo "  Update done, now scheduling initial load..." >>$updlog
-      echo "curl -so /dev/null --connect-timeout 2 --speed-time 2 \"http://ff.cybercomm.at/aulog/logthis.php?w=load%20$gitrepo&r="$hostname"\" >/dev/null 2>/dev/null" >>/tmp/autoupdateexecute.sh
       echo "echo \"Triggering load for "$gitrepo"\" >>"$updlog >>/tmp/autoupdateexecute.sh
-      echo $(dirname $wiz)"/wizard-run load >>"$updlog >>/tmp/autoupdateexecute.sh
+      if [ "$suche" == "OLSRd_V1" ] || [ "$suche" == "OLSRd_V2" ]; then
+        #wait 8 seconds on olsrd-upgrade before going on 
+        echo "curl -so /dev/null --connect-timeout 2 --speed-time 2 \"http://ff.cybercomm.at/aulog/logthis.php?w=delayload%20$gitrepo&r="$hostname"\" >/dev/null 2>/dev/null" >>/tmp/autoupdateexecute.sh
+        echo $(dirname $wiz)"/wizard-run load >>"$updlog >>/tmp/autoupdateexecute.sh
+        echo "sleep 8" >>/tmp/autoupdateexecute.sh
+      else
+        # wizards not critical to connection can be installed without delays
+        echo "curl -so /dev/null --connect-timeout 2 --speed-time 2 \"http://ff.cybercomm.at/aulog/logthis.php?w=load%20$gitrepo&r="$hostname"\" >/dev/null 2>/dev/null" >>/tmp/autoupdateexecute.sh
+        echo $(dirname $wiz)"/wizard-run load >>"$updlog >>/tmp/autoupdateexecute.sh
+      fi
       echo "curl -so /dev/null --connect-timeout 2 --speed-time 2 \"http://ff.cybercomm.at/aulog/logthis.php?w=done%20$gitrepo&r="$hostname"\" >/dev/null 2>/dev/null" >>/tmp/autoupdateexecute.sh
     fi
   fi
