@@ -161,6 +161,7 @@ if [ ! -f /config/user-data/autoupdate.dat ]; then
     echo 'wizard-autoupdate=yes' >/config/user-data/autoupdate.dat 2>>$log
     echo '' >>/config/user-data/autoupdate.dat 2>>$log
     sed -i '/^$/d' /config/user-data/autoupdate.dat 2>>$log
+    curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=setup&r=$(hostname)" >/dev/null 2>/dev/null
 fi
 
 # remove installtion block
