@@ -45,7 +45,7 @@ for i in $(find /config/wizard/feature/ -name wizard.html); do
     break
   fi
 done
-if [ ! $wiz ]; then echo "error: $suche wizard.html not found!" >>$updlog; 
+if [ ! $wiz ]; then echo "  error: $suche wizard.html not found!" >>$updlog; 
 else
   CURRENTVERSION=$(head -n 8 $wiz | grep -i versioninfo= | awk -F"=" {'print $2'})
   GITVERSIONDATA=$(curl -sL --connect-timeout 2 --speed-time 2 https://raw.githubusercontent.com/$gitowner/$gitrepo/$gitbranch/wizard.html | head -n 8 | grep -iE "versioninfo=|autoupdate=")
@@ -54,20 +54,20 @@ else
   install=""
   if [ "$GITVERSION" ] && [ "$CURRENTVERSION" ]; then 
     if [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ] && [ "$AUTOVERSION" ] && [ "$GITVERSION" == "$AUTOVERSION" ]; then 
-      echo "new version "$GITVERSION" is enabled to auto-update!" >>$updlog
+      echo "  new version "$GITVERSION" is enabled to auto-update!" >>$updlog
       curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=updating%20$gitrepo%20$CURRENTVERSION%20to%20$GITVERSION&r=$hostname" >/dev/null 2>/dev/null
       install="1"
     elif [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ]; then 
-      echo "new version "$GITVERSION" (current: "$CURRENTVERSION") is not enabled to auto-update" >>$updlog
+      echo "  new version "$GITVERSION" (current: "$CURRENTVERSION") is not enabled to auto-update" >>$updlog
       curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=keep%20$gitrepo%20$CURRENTVERSION%20ignore%20$GITVERSION&r=$hostname" >/dev/null 2>/dev/null
     elif [ $(($GITVERSION)) == $(($CURRENTVERSION)) ]; then 
-      echo "current version "$CURRENTVERSION" is up-to-date" >>$updlog
+      echo "  current version "$CURRENTVERSION" is up-to-date" >>$updlog
     elif [ $(($GITVERSION)) \< $(($CURRENTVERSION)) ]; then 
-      echo "current version "$CURRENTVERSION" is newer than version "$GITVERSION" on github" >>$updlog
+      echo "  current version "$CURRENTVERSION" is newer than version "$GITVERSION" on github" >>$updlog
       curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=ahead%20$gitrepo%20$CURRENTVERSION%20over%20$GITVERSION&r=$hostname" >/dev/null 2>/dev/null
     fi
     if [ "$install" ]; then
-      echo "Downloading "$(dirname $wiz)"..."
+      echo "  Downloading "$(dirname $wiz)"..." >>$updlog
       curl -sL -o /tmp/ER-wizard.tar.gz --connect-timeout 2 --speed-time 2 https://api.github.com/repos/$gitowner/$gitrepo/tarball >>$updlog 2>>$updlog
       tar   -xvzf /tmp/ER-wizard.tar.gz -C /tmp >/tmp/result.txt 2>>$updlog
       rm -f       /tmp/ER-wizard.tar.gz 2>>$updlog
@@ -79,8 +79,9 @@ else
       rm /tmp/result.txt
       rm -Rf /tmp/$gitowner-$gitrepo* 
       chmod 755 $(dirname $wiz)"/"wizard-run 2>>$updlog
-      echo "Update done, now scheduling initial load..." >>$updlog
+      echo "  Update done, now scheduling initial load..." >>$updlog
       echo "curl -so /dev/null --connect-timeout 2 --speed-time 2 \"http://ff.cybercomm.at/aulog/logthis.php?w=load%20$gitrepo&r="$hostname"\" >/dev/null 2>/dev/null" >>/tmp/autoupdateexecute.sh
+      echo "echo \"Triggering load for "$gitrepo"\" >>"$updlog >>/tmp/autoupdateexecute.sh
       echo $(dirname $wiz)"/wizard-run load >>"$updlog >>/tmp/autoupdateexecute.sh
       echo "curl -so /dev/null --connect-timeout 2 --speed-time 2 \"http://ff.cybercomm.at/aulog/logthis.php?w=done%20$gitrepo&r="$hostname"\" >/dev/null 2>/dev/null" >>/tmp/autoupdateexecute.sh
     fi
@@ -136,14 +137,15 @@ start () {
   fi
   if [ "$(cat /tmp/autoupdateexecute.sh | wc -l)" \> 1 ]; then
     echo "curl -so /dev/null --connect-timeout 2 --speed-time 2 \"http://ff.cybercomm.at/aulog/logthis.php?w=finish&r="$hostname"\" >/dev/null 2>/dev/null" >>/tmp/autoupdateexecute.sh
+    echo "echo \".\" >>"$updlog >>/tmp/autoupdateexecute.sh
     chmod 755 /tmp/autoupdateexecute.sh
     curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=schedule&r=$hostname" >/dev/null 2>/dev/null
-    at now +2min -f /tmp/autoupdateexecute.sh >>$updlog
+    at now +2min -f /tmp/autoupdateexecute.sh >>$updlog 2>/dev/null
   else
     curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=finish&r=$hostname" >/dev/null 2>/dev/null
+    echo "." >>$updlog
   fi
   rm /tmp/autoupdateexecute.sh
-  echo "." >>$updlog
 }
 
 start
