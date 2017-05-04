@@ -144,12 +144,14 @@ start () {
     echo "currently offline or no autoupdate.dat" >>$updlog
   fi
   if [ "$(cat /tmp/autoupdateexecute.sh | wc -l)" \> 1 ]; then
+    echo "sleep 3" >>/tmp/autoupdateexecute.sh
     echo "curl -so /dev/null --connect-timeout 2 --speed-time 2 \"http://ff.cybercomm.at/aulog/logthis.php?w=finish&r="$hostname"\" >/dev/null 2>/dev/null" >>/tmp/autoupdateexecute.sh
     echo "echo \".\" >>"$updlog >>/tmp/autoupdateexecute.sh
     chmod 755 /tmp/autoupdateexecute.sh
     curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=schedule&r=$hostname" >/dev/null 2>/dev/null
     at now +2min -f /tmp/autoupdateexecute.sh >>$updlog 2>/dev/null
   else
+    sleep 3
     curl -so /dev/null --connect-timeout 2 --speed-time 2 "http://ff.cybercomm.at/aulog/logthis.php?w=finish&r=$hostname" >/dev/null 2>/dev/null
     echo "." >>$updlog
   fi
