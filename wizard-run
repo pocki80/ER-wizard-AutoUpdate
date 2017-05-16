@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# EdgeMAX Wizard "ER-wizard-AutoUpdate" created 04/2017 by CPO/BMK for FunkFeuer.at
-# Version 20170515
+# EdgeMAX Wizard "ER-wizard-AutoUpdate" created 04/2017 by CPO for FunkFeuer.at
+# Version 20170516
 # ^-- previous line is used from bmk-webstatus-package as version identification, dont remove "Version "
 # Shortform: ER-wizard-AutoUpdate
 #
@@ -140,7 +140,8 @@ start () {
       [ "$u" == "wizard-0xffwsle" ]   && autoupdatewizard 0xFF-BMK-Webstatus-LetsEncrypt pocki80 ER-wizard-0xFF-WSLE master
       [ "$u" == "wizard-olsr""d_v2" ]   && autoupdatewizard OLSR""d_V2 pocki80 ER-wizard-OLSR""d_V2 master
       [ "$u" == "wizard-olsr""d_v1" ]   && autoupdatewizard OLSR""d_V1 vchrizz ER-wizard-OLSR""d_V1 master
-      [ "$u" == "wizard-autoupdate" ] && autoupdatewizard ER-wizard-AutoUpdate pocki80 ER-wizard-AutoUpdate master
+      [ "$u" == "wizard-""ebtables" ]   && autoupdatewizard ER-wizard-ebtables pocki80 ER-wizard-ebtables master
+      [ "$u" == "wizard-""autoupdate" ] && autoupdatewizard ER-wizard-AutoUpdate pocki80 ER-wizard-AutoUpdate master
     done
   else
     echo "currently offline or no autoupdate.dat" >>$updlog
@@ -213,7 +214,7 @@ load () {
         fi
     done
     if [ ! $olsrdwizard ]; then
-        updatetext="error: 0xFF-BMK-Webstatus-LetsEncrypt wizard.html not found!" >>$log 2>>$log
+        updatetext="error: Auto-Update wizard.html not found!" >>$log 2>>$log
     else
         CURRENTVERSION=$(head -n 8 $olsrdwizard | grep -i versioninfo= | awk -F"=" {'print $2'})
         if [ $((onlinecheck)) = 0 ]; then
@@ -260,6 +261,11 @@ load () {
             fi 
         elif [[ $(head $i -n 10 | grep '0xFF-BMK-''Webstatus-LetsEncrypt') ]]; then
             internal="wizard-0xffwsle"
+            if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
+                wizstatus='"enabled":"on",'
+            fi 
+        elif [[ $(head $i -n 10 | grep 'ER-wizard-''ebtables') ]]; then
+            internal="wizard-ebtables"
             if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
                 wizstatus='"enabled":"on",'
             fi 
