@@ -294,18 +294,18 @@ load () {
             GITVERSION=$(curl -sL --connect-timeout 2 --speed-time 2 https://raw.githubusercontent.com/$gitowner/$gitrepo/$gitbranch/wizard.html | head -n 8 | grep -i versioninfo= | awk -F"=" {'print $2'})
             if [ "$GITVERSION" ] && [ "$CURRENTVERSION" ]; then 
                 if [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ]; then 
-                    updatetext="new version available: "$GITVERSION", current: "$CURRENTVERSION >>$log 2>>$log
+                    updatetext="new version available" >>$log 2>>$log
                 else
-                    updatetext="current version "$CURRENTVERSION" is up-to-date" >>$log 2>>$log
+                    updatetext="up-to-date" >>$log 2>>$log
                 fi
             else
-                updatetext="version info not available. git:"$GITVERSION", current: "$CURRENTVERSION"." >>$log 2>>$log
+                updatetext="info not available" >>$log 2>>$log
             fi
         else
-            updatetext="version info not available. git:OFFLINE, current: "$CURRENTVERSION"." >>$log 2>>$log
+            updatetext="OFFLINE" >>$log 2>>$log
             GITVERSION=""
         fi
-        wizards=$wizards'{'$wizstatus'"name":"'${name}'","internal":"'${internal}'","current":"'${CURRENTVERSION}'","text":"'${updatetext}'","git":"'${git}'"},'
+        wizards=$wizards'{'$wizstatus'"name":"'${name}'","internal":"'${internal}'","current":"'${CURRENTVERSION}'","text":"'${updatetext}'","git":"'${GITVERSION}'"},'
     done
     wizards=${wizards%","}
     wizards=",\"wizards\":[$wizards]"
