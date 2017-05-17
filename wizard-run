@@ -204,6 +204,8 @@ load () {
     echo "Load procedure..." >>$log
     packagestatus='"packagestatus":"ok"'
 
+    onlinetest=$((onlinecheck))
+
     ####### wizard version check against github
     # 
     olsrdwizard=""
@@ -217,7 +219,7 @@ load () {
         updatetext="error: Auto-Update wizard.html not found!" >>$log 2>>$log
     else
         CURRENTVERSION=$(head -n 8 $olsrdwizard | grep -i versioninfo= | awk -F"=" {'print $2'})
-        if [ $((onlinecheck)) = 0 ]; then
+        if [ $onlinetest = 0 ]; then
             GITVERSION=$(curl -sL --connect-timeout 2 --speed-time 2 https://raw.githubusercontent.com/$gitowner/$gitrepo/$gitbranch/wizard.html | head -n 8 | grep -i versioninfo= | awk -F"=" {'print $2'})
             if [ "$GITVERSION" ] && [ "$CURRENTVERSION" ]; then 
                 if [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ]; then 
@@ -249,30 +251,61 @@ load () {
             if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
                 wizstatus='"enabled":"on",'
             fi 
+            gitowner="pocki80"
+            gitrepo="ER-wizard-AutoUpdate"
+            gitbranch="master"
         elif [[ $(head $i -n 10 | grep 'OLSR''d_V1') ]]; then
             internal="wizard-olsrd_v1"
             if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
                 wizstatus='"enabled":"on",'
             fi 
+            gitowner="vchrizz"
+            gitrepo="ER-wizard-OLSR""d_V1"
+            gitbranch="master"
         elif [[ $(head $i -n 10 | grep 'OLSR''d_V2') ]]; then
             internal="wizard-olsrd_v2"
             if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
                 wizstatus='"enabled":"on",'
             fi 
+            gitowner="pocki80"
+            gitrepo="ER-wizard-OLSR""d_V2"
+            gitbranch="master"
         elif [[ $(head $i -n 10 | grep '0xFF-BMK-''Webstatus-LetsEncrypt') ]]; then
             internal="wizard-0xffwsle"
             if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
                 wizstatus='"enabled":"on",'
             fi 
+            gitowner="pocki80"
+            gitrepo="ER-wizard-0xFF-WSLE"
+            gitbranch="master"
         elif [[ $(head $i -n 10 | grep 'ER-wizard-''ebtables') ]]; then
             internal="wizard-ebtables"
             if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
                 wizstatus='"enabled":"on",'
             fi 
+            gitowner="pocki80"
+            gitrepo="ER-wizard-ebtables"
+            gitbranch="master"
         else
             continue
         fi
-        wizards=$wizards'{'$wizstatus'"name":"'${name}'","internal":"'${internal}'","current":"'${current}'","text":"'${infotext}'","git":"'${git}'"},'
+        CURRENTVERSION=$(head -n 10 $i | grep -i versioninfo= | awk -F"=" {'print $2'})
+        if [ $onlinetest = 0 ]; then
+            GITVERSION=$(curl -sL --connect-timeout 2 --speed-time 2 https://raw.githubusercontent.com/$gitowner/$gitrepo/$gitbranch/wizard.html | head -n 8 | grep -i versioninfo= | awk -F"=" {'print $2'})
+            if [ "$GITVERSION" ] && [ "$CURRENTVERSION" ]; then 
+                if [ $(($GITVERSION)) \> $(($CURRENTVERSION)) ]; then 
+                    updatetext="new version available: "$GITVERSION", current: "$CURRENTVERSION >>$log 2>>$log
+                else
+                    updatetext="current version "$CURRENTVERSION" is up-to-date" >>$log 2>>$log
+                fi
+            else
+                updatetext="version info not available. git:"$GITVERSION", current: "$CURRENTVERSION"." >>$log 2>>$log
+            fi
+        else
+            updatetext="version info not available. git:OFFLINE, current: "$CURRENTVERSION"." >>$log 2>>$log
+            GITVERSION=""
+        fi
+        wizards=$wizards'{'$wizstatus'"name":"'${name}'","internal":"'${internal}'","current":"'${CURRENTVERSION}'","text":"'${updatetext}'","git":"'${git}'"},'
     done
     wizards=${wizards%","}
     wizards=",\"wizards\":[$wizards]"
