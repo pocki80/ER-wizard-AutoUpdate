@@ -245,14 +245,14 @@ load () {
         wizstatus=""
         internal=""
         infotext=""
-        ## fool status-script with ''
+        ## fool status-script with '' or ""
         if [[ $(head $i -n 10 | grep 'ER-wizard-''AutoUpdate') ]]; then
             internal="wizard-autoupdate"
             if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
                 wizstatus='"enabled":"on",'
             fi 
             gitowner="pocki80"
-            gitrepo="ER-wizard-AutoUpdate"
+            gitrepo="ER-wizard-Auto""Update"
             gitbranch="master"
         elif [[ $(head $i -n 10 | grep 'OLSR''d_V1') ]]; then
             internal="wizard-olsrd_v1"
@@ -276,7 +276,7 @@ load () {
                 wizstatus='"enabled":"on",'
             fi 
             gitowner="pocki80"
-            gitrepo="ER-wizard-0xFF-WSLE"
+            gitrepo="ER-wizard-0xFF""-WSLE"
             gitbranch="master"
         elif [[ $(head $i -n 10 | grep 'ER-wizard-''ebtables') ]]; then
             internal="wizard-ebtables"
@@ -284,7 +284,7 @@ load () {
                 wizstatus='"enabled":"on",'
             fi 
             gitowner="pocki80"
-            gitrepo="ER-wizard-ebtables"
+            gitrepo="ER-wizard-eb""tables"
             gitbranch="master"
         else
             continue
