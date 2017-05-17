@@ -2,9 +2,9 @@
 
 EdgeMAX Wizard "ER-wizard-AutoUpdate" created 04/2017 by CPO for FunkFeuer.at
 Works on EdgeRouter and EdgeRouter X / X-SFP (system version 1.9.0+)
-versioninfo=201705160
+versioninfo=201705170
 ^-- use version identifier as number: YYYYMMDDX whereas X can be intraday-version
-autoupdate=201705160
+autoupdate=201705170
 ^-- set autoupdate the same version identifier to allow autoupdates
 
 
@@ -14,13 +14,14 @@ autoupdate=201705160
 </div>
 <legend style="position:absolute;right:0px;padding:5px;">
     <center>EdgeMAX Wizard "ER-wizard-AutoUpdate"<br>created 04/2017 by CPO for FunkFeuer.at<br>
-    Version 20170516</center>
+    Version 20170517</center>
 </legend>
 <div style="padding:15px;border: 1px solid lightgray;width:648px">
   <table border="0">
     <tr><td style="vertical-align:middle">Update Info:</td>   <td><input style="right:10px" id="updatestatus" name="updatestatus" type="text" size="60" disabled /></td></tr>
     <tr><td colspan="2"><div><span><input id="updatefromgithub" name="updatefromgithub" type="checkbox" />&nbsp;</span></div><div><span class="text" data-infotip='Load and install newest version directly from Github'> Upgrade Wizard from GitHub (online only) on 'Apply'</span></div></td></tr>
     <tr><td colspan="2"><div><span><input id="autoupdatefromgithub" name="autoupdatefromgithub" type="checkbox" />&nbsp;</span></div><div><span class="text" data-infotip='Runs a daily job checking for updates - installs available auto-updates automatically'> Upgrade Wizard from GitHub <b>automatically</b> (just this AutoUpdate-Wizard, not the individual Wizards) </span></div></td></tr>
+    <tr><td colspan="2"><div><span><input id="executenow" name="executenow" type="checkbox" />&nbsp;</span></div><div><span class="text" data-infotip='Run autoupdate procedure just right now'> Execute all available autoupdates now on 'Apply' </span></div></td></tr>
   </table>
 </div>
 <fieldset id="wizards" name="wizards" class="primary expanded">
