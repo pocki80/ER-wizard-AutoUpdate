@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # EdgeMAX Wizard "ER-wizard-AutoUpdate" created 04/2017 by CPO for FunkFeuer.at
-# Version 20170517
+# Version 20171122
 # ^-- previous line is used from bmk-webstatus-package as version identification, dont remove "Version "
 # Shortform: ER-wizard-AutoUpdate
 #
@@ -25,10 +25,35 @@ gitbranch="master"
 # DO NOT EDIT BELOW HERE !
 #
 
-echo "EdgeMAX ER-wizard-AutoUpdate Wizard started $(date +%H:%M:%S.%N)" >>$log
+echo "EdgeMAX ER-wizard-AutoUpdate Wizard started $(date +%Y-%m-%d/%H:%M:%S.%N) - Session="$$ >>$log
 
 #base64begin 
 # !dont edit or remove this comment!
+
+# check of local configured DNS
+if [ $(grep -E "^    name-server " /config/config.boot | grep -v ":" | wc -l) == "0" ]; then
+    echo "No IPv4-DNS server onfigured, will apply 1st Google-DNS 8.8.8.8" >>$log
+    executecmd="set system name-server 8.8.8.8"
+    cmd="/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper"
+    tfile=$(mktemp)
+(
+$cmd begin
+ret=0
+$cmd $executecmd || ret=1
+if [ $ret == 0 ]; then
+    $cmd commit || ret=1
+fi
+if [ $ret == 0 ]; then
+    $cmd save || ret=1
+fi
+$cmd end
+exit $ret
+) >$tfile 2>&1
+    ret=$?
+    output=$(cat $tfile)
+    rm -f $tfile
+    echo "${output}" >>$log
+fi
 
 cat >/config/user-data/autoupdate.sh 2>>$log <<'ENDSCRIPTINSTALL'
 #!/bin/bash
@@ -417,4 +442,4 @@ case "$ACTION" in
         ;;
 esac
 
-echo "EdgeMAX ER-wizard-AutoUpdate Wizard ended $(date +%H:%M:%S.%N)" >> $log
+echo "EdgeMAX ER-wizard-AutoUpdate Wizard ended $(date +%Y-%m-%d/%H:%M:%S.%N) - Session="$$ >> $log
