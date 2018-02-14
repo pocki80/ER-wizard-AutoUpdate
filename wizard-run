@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # EdgeMAX Wizard "ER-wizard-AutoUpdate" created 04/2017 by CPO for FunkFeuer.at
-# Version 20171122
+# Version 20180214
 # ^-- previous line is used from bmk-webstatus-package as version identification, dont remove "Version "
 # Shortform: ER-wizard-AutoUpdate
 #
@@ -312,7 +312,7 @@ load () {
             gitowner="pocki80"
             gitrepo="ER-wizard-eb""tables"
             gitbranch="master"
-        elif [[ $(head $i -n 10 | grep 'ER-wizard-''openvpn2ts') ]]; then
+        elif [[ $(head $i -n 10 | grep 'ER-wizard-''0xFF-OpenVPN2TS') ]]; then
             internal="wizard-openvpn2ts"
             if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
                 wizstatus='"enabled":"on",'
