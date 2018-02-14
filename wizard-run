@@ -166,6 +166,7 @@ start () {
       [ "$u" == "wizard-olsr""d_v2" ]   && autoupdatewizard OLSR""d_V2 pocki80 ER-wizard-OLSR""d_V2 master
       [ "$u" == "wizard-olsr""d_v1" ]   && autoupdatewizard OLSR""d_V1 vchrizz ER-wizard-OLSR""d_V1 master
       [ "$u" == "wizard-""ebtables" ]   && autoupdatewizard ER-wizard-ebtables pocki80 ER-wizard-ebtables master
+      [ "$u" == "wizard-""openvpn2ts" ] && autoupdatewizard ER-wizard-0xFF-OpenVPN2TS pocki80 ER-wizard-0xFF-OpenVPN2TS master
       [ "$u" == "wizard-""autoupdate" ] && autoupdatewizard ER-wizard-AutoUpdate pocki80 ER-wizard-AutoUpdate master
     done
   else
@@ -310,6 +311,14 @@ load () {
             fi 
             gitowner="pocki80"
             gitrepo="ER-wizard-eb""tables"
+            gitbranch="master"
+        elif [[ $(head $i -n 10 | grep 'ER-wizard-''openvpn2ts') ]]; then
+            internal="wizard-openvpn2ts"
+            if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
+                wizstatus='"enabled":"on",'
+            fi 
+            gitowner="pocki80"
+            gitrepo="ER-wizard-0xFF-Open""VPN2TS"
             gitbranch="master"
         else
             continue
