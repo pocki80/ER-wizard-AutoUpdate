@@ -30,7 +30,8 @@ echo "EdgeMAX ER-wizard-AutoUpdate Wizard started $(date +%Y-%m-%d/%H:%M:%S.%N) 
 #base64begin 
 # !dont edit or remove this comment!
 
-sudo /config/olsrd2/startolsrd2.sh >>/var/log/0xffolsrd2.log 2>>/var/log/0xffolsrd2.log
+#restart olsrd2 if enabled
+[ -f /config/scripts/post-config.d/startolsrd2.sh ] && sudo /config/scripts/post-config.d/startolsrd2.sh >>/var/log/0xffolsrd2.log 2>>/var/log/0xffolsrd2.log
 
 # check of local configured DNS
 if [ $(grep -E "^    name-server " /config/config.boot | grep -v ":" | wc -l) == "0" ]; then
