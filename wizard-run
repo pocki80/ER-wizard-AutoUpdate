@@ -37,7 +37,7 @@ if [ -f /config/scripts/post-config.d/startolsrd2.sh ]; then
   ps aux | grep "/config/olsrd2/olsrd2 -l /config/olsrd2/olsrd2.conf" | grep -v grep | awk '{print $2;}' | xargs kill 2>/dev/null
   sleep 2
   rm -f /var/lock/olsrd2
-  ip -6 r flush proto 100
+  #ip -6 r flush proto 100
   sleep 1
   # Starting olsrd2...
   /config/olsrd2/olsrd2 -l /config/olsrd2/olsrd2.conf
