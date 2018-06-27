@@ -6,3 +6,4 @@ Supported Wizards:
 - https://github.com/pocki80/ER-wizard-OLSRd_V2
 - https://github.com/pocki80/ER-wizard-0xFF-WSLE
 - https://github.com/pocki80/ER-wizard-ebtables
+- https://github.com/pocki80/ER-wizard-0xFF-OpenVPN2TS
