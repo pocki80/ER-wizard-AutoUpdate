@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # EdgeMAX Wizard "ER-wizard-AutoUpdate" created 04/2017 by CPO for FunkFeuer.at
-# Version 20181001
+# Version 20181002
 # ^-- previous line is used from bmk-webstatus-package as version identification, dont remove "Version "
 # Shortform: ER-wizard-AutoUpdate
 #
@@ -107,7 +107,7 @@ else
     fi
     if [ "$install" ]; then
       echo "  Downloading "$(dirname $wiz)"..." >>$updlog
-      curl -s -o /tmp/ER-wizard.tar.gz --connect-timeout 2 --speed-time 2 https://codeload.github.com/$gitowner/$gitrepo/legacy.tar.gz/master >>$updlog 2>>$updlog
+      curl -s -o /tmp/ER-wizard.tar.gz --connect-timeout 2 --speed-time 2 https://codeload.github.com/$gitowner/$gitrepo/legacy.tar.gz/$gitbranch >>$updlog 2>>$updlog
       tar   -xvzf /tmp/ER-wizard.tar.gz -C /tmp >/tmp/result.txt 2>>$updlog
       rm -f       /tmp/ER-wizard.tar.gz 2>>$updlog
       while read LINE; do
@@ -385,7 +385,7 @@ apply () {
         elif [ $((onlinecheck)) != 0 ]; then
             echo "currently offline" >>$log 2>>$log
         else
-            curl -s -o /tmp/ER-wizard.tar.gz --connect-timeout 2 --speed-time 2 https://codeload.github.com/$gitowner/$gitrepo/legacy.tar.gz/master >>$log 2>>$log
+            curl -s -o /tmp/ER-wizard.tar.gz --connect-timeout 2 --speed-time 2 https://codeload.github.com/$gitowner/$gitrepo/legacy.tar.gz/$gitbranch >>$log 2>>$log
             tar   -xvzf /tmp/ER-wizard.tar.gz -C /tmp >/tmp/result.txt 2>>$log
             rm -f       /tmp/ER-wizard.tar.gz >>$log 2>>$log
             while read LINE; do
