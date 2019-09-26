@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # EdgeMAX Wizard "ER-wizard-AutoUpdate" created 04/2017 by CPO for FunkFeuer.at
-# Version 20181002
+# Version 20190926
 # ^-- previous line is used from bmk-webstatus-package as version identification, dont remove "Version "
 # Shortform: ER-wizard-AutoUpdate
 #
@@ -178,6 +178,7 @@ start () {
       [ "$u" == "wizard-olsr""d_v2" ]   && autoupdatewizard OLSR""d_V2 pocki80 ER-wizard-OLSR""d_V2 master
       [ "$u" == "wizard-olsr""d_v1" ]   && autoupdatewizard OLSR""d_V1 vchrizz ER-wizard-OLSR""d_V1 master
       [ "$u" == "wizard-""ebtables" ]   && autoupdatewizard ER-wizard-ebtables pocki80 ER-wizard-ebtables master
+      [ "$u" == "wizard-""blockPrivate" ]   && autoupdatewizard ER-wizard-blockPrivate pocki80 ER-wizard-blockPrivate master
       [ "$u" == "wizard-""openvpn2ts" ] && autoupdatewizard ER-wizard-0xFF-OpenVPN2TS pocki80 ER-wizard-0xFF-OpenVPN2TS master
       [ "$u" == "wizard-""autoupdate" ] && autoupdatewizard ER-wizard-AutoUpdate pocki80 ER-wizard-AutoUpdate master
     done
@@ -323,6 +324,14 @@ load () {
             fi 
             gitowner="pocki80"
             gitrepo="ER-wizard-eb""tables"
+            gitbranch="master"
+        elif [[ $(head $i -n 10 | grep 'ER-wizard-''blockPrivate') ]]; then
+            internal="wizard-blockPrivate"
+            if [ -f /config/user-data/autoupdate.dat ] && [ "$(grep -i "$internal=yes" /config/user-data/autoupdate.dat | wc -l)" == "1" ]; then
+                wizstatus='"enabled":"on",'
+            fi 
+            gitowner="pocki80"
+            gitrepo="ER-wizard-block""Private"
             gitbranch="master"
         elif [[ $(head $i -n 10 | grep 'ER-wizard-''0xFF-OpenVPN2TS') ]]; then
             internal="wizard-openvpn2ts"
