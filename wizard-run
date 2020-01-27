@@ -437,7 +437,7 @@ apply () {
             linenumber=$(grep -ni "wizard-autoupdate=yes" /config/user-data/autoupdate.dat | awk -F: {'print $1'})
             sed -i $linenumber'd' /config/user-data/autoupdate.dat 2>>$log
             sed -i '/^$/d' /config/user-data/autoupdate.dat 2>>$log
-            curl -so /dev/null --connect-timeout 2 --speed-time 2 "https://ff.cybercomm.at/aulog/logthis.php?w=off-autoupdate&r=$(hostname)" >/dev/null 2>/dev/null
+            curl -so /dev/null --connect-timeout 2 --speed-time 2 "https://ff.cybercomm.at/aulog/logthis.php?w=off-autoupdate&r="$(hostname) >/dev/null 2>/dev/null
         fi
     fi
     # end
