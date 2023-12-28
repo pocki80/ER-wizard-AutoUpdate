@@ -184,7 +184,7 @@ ENDSCRIPTINSTALL
 chmod 755 /config/user-data/autoupdate.sh >>$log 2>>$log
 
 cat >/config/scripts/post-config.d/autoupdatecron.sh 2>>$log <<'ENDSCRIPTINSTALL'
-#!/bin/bashd
+#!/bin/bash
 #### Auto-Update wizards
 # check for cronjob, re-establish daily start
 if [ -f /config/user-data/autoupdate.sh ] &&
